@@ -12,7 +12,7 @@ The DH table for the robot is given as follows:
     5    theta5       90       0      0
     6  theta6-180   -180       0    -215
     
-Assignment of axis according to the rotation direction provided in the datasheet.
+Assignment of axes according to the rotation direction provided in the datasheet:
 ![image](https://user-images.githubusercontent.com/94879785/147395487-c9e08529-fc3f-451a-a370-28eff9a59892.png)
 
 
