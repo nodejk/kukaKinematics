@@ -14,8 +14,10 @@ The DH table for the robot is given as follows:
 
 Data Sheet:
 https://www.kuka.com/-/media/kuka-downloads/imported/6b77eecacfe542d3b736af377562ecaa/0000325899_en.pdf?rev=fcdf2d2c871e4a10a85f45c68446c4fc&hash=051C01329D7D3501F592EC3B1AB99864
-
+------------------------------------------------------------------------------------------------------------------------------------
 kuka.py has a class named kuka. It initializes with all the kuka dh parameters (a, alpha and d).
+
+Description of methods provided in the class:
 
 forwardKinematics: This method outputs the final position and orientation of the robot for a given configuration.
     
