@@ -2,11 +2,11 @@
 Implementation of Forwards Kinematics, Inverse Kinematics, Point to Point Movement and Synchronous movement for Kuka KR 120 R2700-2.
 
 The DH table for the robot is given as follows:
-n: axis index.
-theta: rotation angle of joint.
-alpha: rotation required around x(i+1) to align with x(i).
-d:     displacement from i to i+1 frame along the z(i) axis.
-a: displacement from i to i+1 frame along the x(i+1) axis.
+1. n: axis index.
+2. theta: rotation angle of joint.
+3. alpha: rotation required around x(i+1) to align with x(i).
+4. d:     displacement from i to i+1 frame along the z(i) axis.
+5. a: displacement from i to i+1 frame along the x(i+1) axis.
 | n     | theta | alpha |   a   |   d   |
 | :---: | :---: | :---: | :---: | :---: |
 |0    |    0      |     -180 |       0  |  645|
