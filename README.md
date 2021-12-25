@@ -14,7 +14,7 @@ The DH table for the robot is given as follows:
     
 Assignment of axes according to the rotation direction provided in the datasheet:
 
-|Axes|Rotation|
+|Axes |Direction of Rotation|
 | --- | --- |
 | ![image](https://user-images.githubusercontent.com/94879785/147395487-c9e08529-fc3f-451a-a370-28eff9a59892.png) | ![image](https://user-images.githubusercontent.com/94879785/147395506-d4504a08-8709-4169-8d49-65d2ea82109d.png) |
 
