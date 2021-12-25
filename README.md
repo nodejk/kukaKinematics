@@ -17,13 +17,13 @@ https://www.kuka.com/-/media/kuka-downloads/imported/6b77eecacfe542d3b736af37756
 
 kuka.py has a class named kuka. It initializes with all the kuka dh parameters (a, alpha and d).
 
-forwardKinematics: This method outputs the final position and orientation of the robot.
+forwardKinematics: This method outputs the final position and orientation of the robot for a given configuration.
     
     req: theta1, theta2, theta3, theta4, theta5 and theta6.
     output: 4X4 end transformation matrix.
  
  
- inverseKinematics: this method outputs all the configurations in a form of list using geometry. Note that angles are according 
+ inverseKinematics: This method outputs all the configurations in a form of list using geometry. Note that angles are according 
  to the angles direction provided in the datasheet. This method does not take into consideration the physical contraints of the robot.
  At max, there are 48 configurations which can be present for the robot. The breakdown is as follows:
  
@@ -33,6 +33,12 @@ forwardKinematics: This method outputs the final position and orientation of the
    4. 4 configurations for the joint 4 and 6.
 
     req: 4X4 end transformation matrix.
+    output: [[theta1, theta2,...theta6], [theta1, theta2,...theta6]...]
+    
+line2lineMovement: This method returns a list of configurations required to reach from point A to point B in a straight line. It assumes the 
+starting and the end oritentation to be same. To find if the movement is even possible it finds the optimal orientation according to the plausible speed of each joint and physical contraints of them provied in the datasheet above. timeSample is the sampling time for the given robot.
+
+    req: startTransformationMatrix, endTransformationMatrix, velocity, acceleration, timeSample.
     output: [[theta1, theta2,...theta6], [theta1, theta2,...theta6]...]
 
 
