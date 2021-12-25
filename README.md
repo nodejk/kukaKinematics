@@ -7,6 +7,7 @@ The DH table for the robot is given as follows:
 3. alpha: rotation required around x(i+1) to align with x(i).
 4. d:     displacement from i to i+1 frame along the z(i) axis.
 5. a: displacement from i to i+1 frame along the x(i+1) axis.
+
 | n     | theta | alpha |   a   |   d   |
 | :---: | :---: | :---: | :---: | :---: |
 |0    |    0      |     -180 |       0  |  645|
