@@ -3,14 +3,15 @@ Implementation of Forwards Kinematics, Inverse Kinematics, Point to Point Moveme
 
 The DH table for the robot is given as follows:
 
-    n    theta       alpha     a      d
-    0      0         -180      0     645
-    1    theta1       90      330     0
-    2    theta2        0      1150    0
-    3   theta3-90     90      115     0
-    4    theta4      -90       0    -1220
-    5    theta5       90       0      0
-    6  theta6-180   -180       0    -215
+   | n     | theta | alpha |   a   |   d   |
+    | :---: | :---: | :---: | :---: | :---: |
+    |0    |    0      |     -180 |       0  |  645|
+    |1    |  theta1   |      90  |     330  |  0  |
+    |2    |theta2     |    0     |    1150  |  0  |
+    |3    |theta3-90  |    90    |     115  |  0  |  
+    |4    |theta4     |   -90    |       0  |-1220|
+    |5    |theta5     |    90    |       0  |  0  |
+    |6    |theta6-180 |  -180    |       0  |-215 |
     
 Assignment of axes according to the rotation direction provided in the datasheet:
 
