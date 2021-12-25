@@ -18,6 +18,7 @@ https://www.kuka.com/-/media/kuka-downloads/imported/6b77eecacfe542d3b736af37756
 kuka.py has a class named kuka. It initializes with all the kuka dh parameters (a, alpha and d).
 
 forwardKinematics: This method outputs the final position and orientation of the robot.
+    
     req: theta1, theta2, theta3, theta4, theta5 and theta6.
     output: 4X4 end transformation matrix.
  
