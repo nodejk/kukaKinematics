@@ -26,10 +26,11 @@ forwardKinematics: This method outputs the final position and orientation of the
  inverseKinematics: this method outputs all the configurations in a form of list using geometry. Note that angles are according 
  to the angles direction provided in the datasheet. This method does not take into consideration the physical contraints of the robot.
  At max, there are 48 configurations which can be present for the robot. The breakdown is as follows:
-       1. 3 configurations for the first joint.
-       2. 2 configurations for elbow up and elbow down.
-       3. 2 configurations for wrist up and wrist down orientation.
-       4. 4 configurations for the joint 4 and 6.
+ 
+   1. 3 configurations for the first joint.
+   2. 2 configurations for elbow up and elbow down.
+   3. 2 configurations for wrist up and wrist down orientation.
+   4. 4 configurations for the joint 4 and 6.
 
     req: 4X4 end transformation matrix.
     output: [[theta1, theta2,...theta6], [theta1, theta2,...theta6]...]
