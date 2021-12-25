@@ -12,11 +12,12 @@ The DH table for the robot is given as follows:
     5    theta5       90       0      0
     6  theta6-180   -180       0    -215
     
-    Assignment of axis according to the rotation direction provided in the datasheet.
-    ![image](https://user-images.githubusercontent.com/94879785/147395487-c9e08529-fc3f-451a-a370-28eff9a59892.png)
+Assignment of axis according to the rotation direction provided in the datasheet.
+![image](https://user-images.githubusercontent.com/94879785/147395487-c9e08529-fc3f-451a-a370-28eff9a59892.png)
 
 
-Update: Currently only forwardKinematics method is working at the moement. I will add others methods soon :)
+Update: Currently only forwardKinematics is added at the moment. I will add others methods soon :)
+
 Data Sheet:
 https://www.kuka.com/-/media/kuka-downloads/imported/6b77eecacfe542d3b736af377562ecaa/0000325899_en.pdf?rev=fcdf2d2c871e4a10a85f45c68446c4fc&hash=051C01329D7D3501F592EC3B1AB99864
 ------------------------------------------------------------------------------------------------------------------------------------
