@@ -1,6 +1,6 @@
 # kukaKinematics
 Implementation of Forwards Kinematics, Inverse Kinematics, Point to Point Movement and Synchronous movement for Kuka KR 120 R2700-2.
-
+(Note: in this implementation, I have chosen the base of Kuka as my base coordinate instead of first joint, that's why there is one extra row in DH row.)
 The DH table for the robot is given as follows:
 1. n: axis index.
 2. theta: rotation angle of joint.
