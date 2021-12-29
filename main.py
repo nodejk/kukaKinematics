@@ -5,6 +5,7 @@
 import numpy as np
 
 from kuka import kuka
+from testconfigurations import possibleConfig
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
@@ -25,9 +26,18 @@ if __name__ == '__main__':
     # print(kukaBot.)
     endEffector = np.array(endEffector)
 
-    # print(kukaBot.inverseKinematics(endEffector))
-    # temp = kukaBot.inverseKinematics(endEffector)
+    # just a test.
+    temp = np.array(kukaBot.inverseKinematicsAllConfig(endEffector))
 
-    # for i in temp:
-    #     print(i)
+    count = 0
+
+    possibleConfig = np.array(possibleConfig)
+    for i in temp:
+        for j in possibleConfig:
+            if(np.sum((i-j) ** 2) < 0.00001):
+                count += 1
+                print("cal: ", i)
+                break
+
+    print(count)
 

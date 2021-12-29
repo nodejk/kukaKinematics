@@ -77,8 +77,6 @@ class kuka:
 
     Data Sheet:
     https://www.kuka.com/-/media/kuka-downloads/imported/6b77eecacfe542d3b736af377562ecaa/0000325899_en.pdf?rev=fcdf2d2c871e4a10a85f45c68446c4fc&hash=051C01329D7D3501F592EC3B1AB99864
-
-
     """
 
     def __init__(self):
@@ -174,7 +172,7 @@ class kuka:
 
     def __getLink2Position(self, theta1):
         """
-        This method is used to find the position and orientation for the 2nd link.
+        This method is used to find the position and orientation for the 2nd link using forward kinematics.
         This is important in order to calculate 3rd and 2nd configurations.
         :param theta1: theta1 angle
         :return: 4X4 transformation matrix in form of numpy array.
@@ -184,6 +182,114 @@ class kuka:
         a2 = dh_matrix(theta1, self.alpha1, self.a1, self.d1)
 
         return np.matmul(a1, a2)
+
+    def __getLink5Position(self, theta1, theta2, theta3):
+        """
+        This method is used to find the end position and orientation of the link5 using forward kinematics
+        :param theta1: angle of link 1.
+        :param theta2: angle of link 2.
+        :param theta3: angle of link 3.
+        :return: 4X4 transformation matrix in form of numpy array.
+        """
+
+        a1 = dh_matrix(0, -180, 0, 645)
+        a2 = dh_matrix(theta1, 90, 330, 0)
+        a3 = dh_matrix(theta2, 0, 1150, 0)
+        a4 = dh_matrix(theta3 - 90, 90, 115, 0)
+
+        return np.matmul(np.matmul(np.matmul(a1, a2), a3), a4)
+
+    def __getwristConfigurations(self, theta4, theta5, theta6):
+        """
+        This method is used to find all the configurations possible.
+        :param theta4: angle of link 4.
+        :param theta5: angle of link 5.
+        :param theta6: angle of link 6.
+        :return: [[theta4.1, theta5.1, theta6.1], [theta4.1, theta5.2, theta6.2], ...]
+        """
+        outputConfig = []
+
+        outputConfig.append([theta4, theta5, theta6])
+
+        if theta4 > 0:
+            if theta6 > 0:
+                outputConfig.append([theta4 - 360, theta5, theta6])
+                outputConfig.append([theta4 - 360, theta5, theta6 - 360])
+                outputConfig.append([theta4, theta5, theta6 - 360])
+            else:
+                outputConfig.append([theta4 - 360, theta5, theta6])
+                outputConfig.append([theta4 - 360, theta5, theta6 + 360])
+                outputConfig.append([theta4, theta5, theta6 + 360])
+        else:
+            if theta6 > 0:
+                outputConfig.append([theta4 + 360, theta5, theta6])
+                outputConfig.append([theta4 + 360, theta5, theta6 - 360])
+                outputConfig.append([theta4, theta5, theta6 - 360])
+            else:
+                outputConfig.append([theta4 + 360, theta5, theta6])
+                outputConfig.append([theta4 + 360, theta5, theta6 + 360])
+                outputConfig.append([theta4, theta5, theta6 + 360])
+
+        return outputConfig
+
+    def __endOrientation(self, configurations, endEffector):
+        """
+        This method returns all 48 configurations (at max).
+        :param configurations: configurations calculated previously
+        [[theta1.1, theta2.1, theta3.1], [theta1.1, theta2.2, theta3.2], ...]
+        :param endEffector: transformation matrix of the end effector (not the wrist position)
+        :return: list of 48 configurations at max.
+        [[theta1.1, theta2.1, theta3.1, theta4.1, theta5.1, theta6.1],
+        [theta1.1, theta2.1, theta3.1, theta4.1, theta5.2, theta6.2],...]
+        """
+        outputConfigurations = []
+        endEffectorRotationMatrix = endEffector[0:3, 0:3]
+
+        for configuration in configurations:
+
+            theta1, theta2, theta3 = configuration[0], configuration[1], configuration[2]
+
+            transformationMatrix = self.__getLink5Position(theta1, theta2, theta3)
+
+            rotationMatrix = np.linalg.inv(transformationMatrix[0:3, 0:3])
+
+            armEndEff = np.matmul(rotationMatrix, endEffectorRotationMatrix)
+
+            R02 = armEndEff[0, 2]
+            R12 = armEndEff[1, 2]
+            R20 = armEndEff[2, 0]
+            R21 = armEndEff[2, 1]
+            R22 = armEndEff[2, 2]
+
+            theta5 = math.degrees(math.atan2(pow(R02 * R02 + R12 * R12, 0.5), -R22))
+
+            # final wrist orientation
+
+            finalwristOrientation = []
+            # in order to handle singularity, as the solutions can be infinite.
+            if theta5 < 0.0001 or abs(abs(theta5) - 180) < 0.0001:
+                finalwristOrientation = [[0, 0, 0], [0, 0, 180], [180, 0, 0], [180, 0, 180]]
+            else:
+                # since there are 2 configurations for the link 5.
+
+                theta5 = math.degrees(math.atan2(pow(R02 * R02 + R12 * R12, 0.5), -R22))
+                theta4 = math.degrees(math.atan2(-R12, -R02))
+                theta6 = math.degrees(math.atan2(R21, R20))
+                # print("---")
+                # print(self.__getwristConfigurations(theta4, theta5, theta6))
+                finalwristOrientation += self.__getwristConfigurations(theta4, theta5, theta6)
+
+                theta5 = math.degrees(math.atan2(-pow(R02 * R02 + R12 * R12, 0.5), -R22))
+                theta4 = math.degrees(math.atan2(R12, R02))
+                theta6 = math.degrees(math.atan2(-R21, -R20))
+
+                finalwristOrientation += self.__getwristConfigurations(theta4, theta5, theta6)
+
+            for wristConfiguration in finalwristOrientation:
+                tempConfig = configuration + wristConfiguration
+                outputConfigurations.append(tempConfig)
+
+        return outputConfigurations
 
     def __theta2Configurations(self, theta1Configurations, xWrist, yWrist, zWrist):
         """
@@ -293,8 +399,7 @@ class kuka:
 
         return outputConfigurations
 
-
-    def inverseKinematics(self, endTransformationMatrix):
+    def inverseKinematicsAllConfig(self, endTransformationMatrix):
         """
         This method is used for the inverse kinematics.
         This calculates all the configurations for a given end effector position and orientation
@@ -315,7 +420,9 @@ class kuka:
 
         theta3Configurations = self.__theta3Configurations(theta2Configurations, xWrist, yWrist, zWrist)
 
-        return theta3Configurations
+        allConfigurations = self.__endOrientation(theta3Configurations, endTransformationMatrix)
+
+        return allConfigurations
 
     def line2lineMovement(self, xStart, yStart, zStart, xEnd, yEnd, zEnd):
 
