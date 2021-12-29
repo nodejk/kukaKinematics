@@ -41,7 +41,7 @@ forwardKinematics: This method outputs the final position and orientation of the
     output: 4X4 end transformation matrix.
  
  
- inverseKinematics: This method outputs all the configurations in a form of list using geometry. Note that angles are according 
+ inverseKinematicsAllConfig: This method outputs all the configurations in a form of list using geometry. Note that angles are according 
  to the angles direction provided in the datasheet. This method does not take into consideration the physical contraints of the robot.
  At max, there are 48 configurations which can be present for the robot. The breakdown is as follows:
  
