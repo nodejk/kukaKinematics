@@ -1,3 +1,5 @@
+import sys
+
 import numpy as np
 import math
 
@@ -149,6 +151,90 @@ class kuka:
         zWrist = endEffector[2, 3] - nz * dg
 
         return [xWrist, yWrist, zWrist]
+
+    def thetaValidConfiguration(self, joint, theta, constraint_type = "angle"):
+        """
+        This method is used to check if a theta configuration is valid or not. These constraints are given in the
+        datasheet and are used in lineMovement method.
+        :param joint: joint for which the constraints have to be checked.
+        :param theta: angle of joint in degrees.
+        :param constraint_type: "angle" for range of motion possible for the joint1 and "speed" if the given speed is
+        possible for the joint to obtain.
+        :return: boolean. true if the configuration is valid otherwise false.
+        """
+
+        if constraint_type not in ['angle', 'speed']:
+            raise Exception("please enter valid constraint type, (angle or speed) for joint {}".format(joint))
+
+        if joint not in [1, 2, 3, 4, 5, 6]:
+            raise Exception("please enter a valid link number. Given: {}".format(joint))
+
+        if joint == 1:
+            if constraint_type == "angle":
+                if abs(theta) <= 185:
+                    return True
+                else:
+                    return False
+            elif constraint_type == "speed":
+                if abs(theta) <= 120:
+                    return True
+                else:
+                    return False
+        elif joint == 2:
+            if constraint_type == "angle":
+                if theta >= -140 and theta <= -5:
+                    return True
+                else:
+                    return False
+            elif constraint_type == "speed":
+                if abs(theta) <= 115:
+                    return True
+                else:
+                    return False
+        elif joint == 3:
+            if constraint_type == "angle":
+                if theta >= -120 and theta <= 168:
+                    return True
+                else:
+                    return False
+            elif constraint_type == "speed":
+                if abs(theta) <= 120:
+                    return True
+                else:
+                    return False
+        elif joint == 4:
+            if constraint_type == "angle":
+                if abs(theta) <= 350:
+                    return True
+                else:
+                    return False
+            elif constraint_type == "speed":
+                if abs(theta) <= 190:
+                    return True
+                else:
+                    return False
+        elif joint == 5:
+            if constraint_type == "angle":
+                if abs(theta) <= 125:
+                    return True
+                else:
+                    return False
+            elif constraint_type == "speed":
+                if abs(theta) <= 180:
+                    return True
+                else:
+                    return False
+        elif joint == 6:
+            if constraint_type == "angle":
+                if abs(theta) <= 350:
+                    return True
+                else:
+                    return False
+            elif constraint_type == "speed":
+                if abs(theta) <= 260:
+                    return True
+                else:
+                    return False
 
     def __theta1Configurations(self, xWrist, yWrist, zWrist):
         """
@@ -411,7 +497,6 @@ class kuka:
         :param endTransformationMatrix: 4X4 end transformation matrix as a form of numpy array.
         :return: [[theta1, theta2,...theta6], [theta1, theta2,...theta6]...]
         """
-
         xWrist, yWrist, zWrist = self.getWristPosition(endTransformationMatrix)
 
         theta1Configurations = self.__theta1Configurations(xWrist, yWrist, zWrist)
@@ -424,6 +509,212 @@ class kuka:
 
         return allConfigurations
 
-    def line2lineMovement(self, xStart, yStart, zStart, xEnd, yEnd, zEnd):
 
-        pass
+    def inverseKinematicsValidConfigurations(self, endTransformationMatrix):
+        """
+        This method returns the list of valid configurations derived from inverse kinematics.
+        :param endTransformationMatrix: 4X4 end transformation matrix as a form of numpy array.
+        :return: [[theta1, theta2,...theta6], [theta1, theta2,...theta6]...]
+        """
+        possibleConfigurations = self.inverseKinematicsAllConfig(endTransformationMatrix)
+
+        validConfigurations = self.__checkConfiguration(possibleConfigurations)
+
+        return validConfigurations
+
+    def __getPoints(self, startPoint, endPoint, d):
+        """
+        This code find the point which is d distance away from the starting point
+        (startPoint) along the line from startPoint to endPoint.
+        :param startPoint: list [x1, y1, z1]
+        :param endPoint: list [x2, y2, y3]
+        :param d: distance from the staring point.
+        :return: np array of (4,) [x, y, z, 1].
+        """
+        x0, y0, z0 = startPoint[0], startPoint[1], startPoint[2]
+        x1, y1, z1 = endPoint[0], endPoint[1], endPoint[2]
+
+        distPoints = magnitudeVector(x1 - x0, y1 - y0, z1 - z0)
+
+        x = x0 + d * (x1 - x0) / distPoints
+        y = y0 + d * (y1 - y0) / distPoints
+        z = z0 + d * (z1 - z0) / distPoints
+
+        return np.array([x, y, z, 1])
+
+
+    def __getDiscreteCartesianSteps(self, startPoint, endPoint, maxVelocity, acceleration, samplingTime):
+        """
+        This method returns a list of discrete cartesian steps required to reach from start point to end point.
+        This method uses either triangular or trapezoid.
+        :param startPoint: [xStart, yStart, zStart] cartesian point
+        :param endPoint: [xEnd, yEnd, zEnd] cartesian point.
+        :param maxVelocity: maximum velocity that the robot in the
+        :param acceleration: acceleration of the robot in the cartesian.
+        :param samplingTime: sampling time of the robot.
+        :return:
+        """
+
+        tc = maxVelocity / acceleration
+
+        xStart, yStart, zStart = startPoint[0], startPoint[1], startPoint[2]
+        xEnd, yEnd, zEnd = endPoint[0], endPoint[1], endPoint[2]
+
+        # cartesian distance between the 2 given points.
+        distanceBetweenPoints = magnitudeVector(xStart - xEnd, yStart - yEnd, zStart - zEnd)
+
+        velocityReached = pow(distanceBetweenPoints * acceleration, 0.5)
+
+        startPoint = np.array(startPoint)
+        endPoint = np.array(endPoint)
+
+        coordinates = []
+
+        if maxVelocity < velocityReached:
+            """
+            this is the first case where the trapezoid velocity profile is formed.
+            """
+            totalTime = distanceBetweenPoints / velocityReached + maxVelocity / acceleration
+            totalTimeSteps = math.ceil(totalTime / samplingTime)
+
+            for i in range(totalTimeSteps):
+                timeStep = i * samplingTime
+
+                if timeStep < tc:
+                    discreteStep = 0.5 * acceleration * timeStep * timeStep
+                elif timeStep < totalTime - tc:
+                    discreteStep = acceleration * tc * (timeStep - 0.5 * tc)
+                else:
+                    discreteStep = distanceBetweenPoints - 0.5 * acceleration * (timeStep - totalTime) * (timeStep - totalTime)
+
+                coordinateStep = self.__getPoints(startPoint, endPoint, discreteStep)
+
+                coordinates.append(coordinateStep)
+        else:
+            """
+            this is the second case where triangular velocity profile is formed.
+            """
+            totalTime = pow(distanceBetweenPoints / acceleration, 0.5) * 2
+            timeTotalSteps = math.ceil(totalTime / samplingTime)
+
+            for i in range(timeTotalSteps):
+                timeStep = i * samplingTime
+
+                if timeStep < totalTime / 2:
+                    discreteStep = 0.5 * acceleration * timeStep * timeStep
+                else:
+                    discreteStep = distanceBetweenPoints - 0.5 * (timeStep - totalTime) * (timeStep - totalTime) * acceleration
+
+                coordinateStep = self.__getPoints(startPoint, endPoint, discreteStep)
+
+                coordinates.append(coordinateStep)
+
+                print(coordinateStep)
+
+        return coordinates
+
+    def __checkConfiguration(self, allThetaConfig):
+        """
+        From a given set of configurations, it is used to find the configuration which is physically possible for the
+        robot to achieve.
+        :param allThetaConfig: the list of configurations from the inverse kinematics method
+        [[theta1, theta2, theta3,...], [theta1, theta2,...],...]
+        :return: valid list of configurations which are possible in the above format.
+        """
+        outputConfig = []
+
+        for configuration in allThetaConfig:
+            t1 = self.thetaValidConfiguration(1, configuration[0], constraint_type="angle")
+            t2 = self.thetaValidConfiguration(2, configuration[1], constraint_type="angle")
+            t3 = self.thetaValidConfiguration(3, configuration[2], constraint_type="angle")
+            t4 = self.thetaValidConfiguration(4, configuration[3], constraint_type="angle")
+            t5 = self.thetaValidConfiguration(5, configuration[4], constraint_type="angle")
+            t6 = self.thetaValidConfiguration(6, configuration[5], constraint_type="angle")
+
+            if t1 and t2 and t3 and t4 and t5 and t6:
+                outputConfig.append(configuration)
+
+        return outputConfig
+
+    def __findOptimalTheta(self, lastThetaConfiguration, validThetaConfigurations, timeSample):
+        """
+        This method is used to find the optimal theta from a given set of configurations. This method finds the optimal
+        configuration by checking if the joint speed is plausible considering the previous joint. Note: this method does
+        not take singularities into account.
+        :param lastThetaConfiguration: last configuration in which the robot was.
+        :param validThetaConfigurations: the number of valid configurations for a given position (from inverse
+        kinematics)
+        :param timeSample: sampling period for the robot.
+        :return: valid configuration in the form of list: [theta1, theta2, theta3, theta4, theta5, theta6]
+        """
+        thetaPrev = np.array(lastThetaConfiguration)
+        validThetaConfigurations = np.array(validThetaConfigurations)
+
+        currentConfig = None
+
+        for configuration in validThetaConfigurations:
+            t1Speed = self.thetaValidConfiguration(1, (configuration[0] - thetaPrev[0])/timeSample, constraint_type="speed")
+            t2Speed = self.thetaValidConfiguration(2, (configuration[1] - thetaPrev[1])/timeSample, constraint_type="speed")
+            t3Speed = self.thetaValidConfiguration(3, (configuration[2] - thetaPrev[2])/timeSample, constraint_type="speed")
+            t4Speed = self.thetaValidConfiguration(4, (configuration[3] - thetaPrev[3])/timeSample, constraint_type="speed")
+            t5Speed = self.thetaValidConfiguration(5, (configuration[4] - thetaPrev[4])/timeSample, constraint_type="speed")
+            t6Speed = self.thetaValidConfiguration(6, (configuration[5] - thetaPrev[5])/timeSample, constraint_type="speed")
+
+            if t1Speed and t2Speed and t3Speed and t4Speed and t5Speed and t6Speed:
+                currentConfig = configuration
+                break
+
+        if currentConfig is None:
+            raise Exception("The linear movement is not possible")
+
+        return currentConfig
+
+    def line2lineMovement(self, startingTransformationMatrix,
+                                endTransformationMatrix,
+                                samplingTime,
+                                maxVelocity,
+                                acceleration,
+                                startingTheta):
+        """
+        This method is used to find configurations required to reach from the start to end in a linear
+        movement. This method does not change the orientation of the end effector throughout the movement but moves it
+        linearly in the cartesian space.
+        :param startingTransformationMatrix: start transformation matrix.
+        :param endTransformationMatrix: end transformation matrix.
+        :param samplingTime: sampling time for the robot.
+        :param maxVelocity: max velocity of the end effector in the cartesian space.
+        :param acceleration: acceleration of the end effector in the cartesian space.
+        :param startingTheta: starting configuration: [theta1, theta2, theta3, theta4, theta5, theta6]
+        :return:
+        """
+        xStart, yStart, zStart = startingTransformationMatrix[0, 3], startingTransformationMatrix[1, 3], \
+                                 startingTransformationMatrix[2, 3]
+
+        xEnd, yEnd, zEnd = endTransformationMatrix[0, 3], endTransformationMatrix[1, 3], endTransformationMatrix[2, 3]
+
+        configurationSteps = []
+
+        rotationMatrixEndEff = startingTransformationMatrix[:4, :3]
+
+        coordinateStep = self.__getDiscreteCartesianSteps([xStart, yStart, zStart],
+                                                       [xEnd, yEnd, zEnd],
+                                                       maxVelocity,
+                                                       acceleration,samplingTime)
+
+        for num, coordinateStep in enumerate(coordinateStep):
+            point1 = np.expand_dims(np.array(coordinateStep), axis= 1)
+
+            transformationMatrix = np.concatenate([rotationMatrixEndEff, point1], axis = 1)
+
+            allThetaConfig = self.inverseKinematicsAllConfig(transformationMatrix)
+            validThetaConfig = self.__checkConfiguration(allThetaConfig)
+
+            optimalTheta = self.__findOptimalTheta(startingTheta, validThetaConfig, samplingTime)
+
+            configurationSteps.append(optimalTheta)
+
+            startingTheta = optimalTheta
+
+        return configurationSteps
+
+
