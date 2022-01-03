@@ -26,7 +26,9 @@ Assignment of axes according to the rotation direction provided in the datasheet
 
 
 
-Update: Currently only forwardKinematics is added at the moment. I will add others methods soon :)
+Update: Forward Kinematics, Inverse Kinematics and line Movement is added.
+
+Future Updates: PTP synchronous and PTP asynchronous will be added soon :)
 
 Data Sheet:
 https://www.kuka.com/-/media/kuka-downloads/imported/6b77eecacfe542d3b736af377562ecaa/0000325899_en.pdf?rev=fcdf2d2c871e4a10a85f45c68446c4fc&hash=051C01329D7D3501F592EC3B1AB99864
