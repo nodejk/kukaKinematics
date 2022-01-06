@@ -55,6 +55,9 @@ forwardKinematics: This method outputs the final position and orientation of the
     req: 4X4 end transformation matrix.
     output: [[theta1, theta2,...theta6], [theta1, theta2,...theta6]...]
     
+inverseKinematicsValidConfigurations: This method is same as inverseKinematicsAllConfig excepts it outputs valid configurations that the robot
+can phyically reach.
+    
 line2lineMovement: This method returns a list of configurations required to reach from point A to point B in a straight line. It assumes the 
 starting and the end oritentation to be same. To find if the movement is even possible it finds the optimal orientation according to the plausible speed of each joint and physical contraints of them provied in the datasheet above. timeSample is the sampling time for the given robot.
 
